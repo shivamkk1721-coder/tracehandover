@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TraceHandover</title>
+    <style>
+        @media print {
+            body > *:not(#approved-handover) {
+                display: none !important;
+            }
+
+            #print-handover {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>TraceHandover</h1>
+<p>Upload project files and review the information for a handover.</p>
+<p>Uploaded text may be sent to Google Gemini. For this demo, use sample data.</p>
+
+<form id="sample-form" action="/upload" method="post" enctype="multipart/form-data">
+    <input id="sample-files" type="file" name="files" multiple hidden>
+    <button id="sample-button" type="button">Try sample project</button>
+</form>
+<form action="/upload" method="post" enctype="multipart/form-data">
+    <label for="files">Choose .txt, .md, or .csv files:</label>
+    <input id="files" type="file" name="files"
+           accept=".txt,.md,.csv" multiple required>
+    <button type="submit">Generate suggestions</button>
+</form>
+
+<p th:if="${error != null}" th:text="${error}"></p>
+<p th:if="${aiMessage != null}" th:text="${aiMessage}"></p>
+
+<section th:if="${passages != null}">
+    <h2>Review sources</h2>
+    <p>Check every suggestion against the source. Edit and select the items to include.</p>
+
+    <form action="/handover" method="post">
+        <div th:each="passage : ${passages}"
+             th:with="suggestion=${suggestions != null ? suggestions[passage['id']] : null}">
+            <hr>
+
+            <p>
+                <strong th:text="${passage['id']}"></strong>
+                <span th:text="${passage['file']}"></span>
+            </p>
+
+            <p>
+                <strong>Original source:</strong>
+                <span th:text="${passage['text']}"></span>
+            </p>
+
+            <p th:if="${suggestion != null}">
+                AI suggestion — review before approving.
+            </p>
+
+            <p th:if="${suggestion == null}">
+                No AI suggestion for this line; review manually.
+            </p>
+
+            <p th:if="${suggestion != null and suggestion['warning'] != ''}">
+                <strong>Review note:</strong>
+                <span th:text="${suggestion['warning']}"></span>
+            </p>
+
+            <p>
+                <label>Task:
+                    <input type="text"
+                           th:name="${'task_' + passage['id']}"
+                           th:value="${suggestion != null ? suggestion['task'] : passage['text']}">
+                </label>
+            </p>
+
+            <p>
+                <label>Owner:
+                    <input type="text"
+                           th:name="${'owner_' + passage['id']}"
+                           th:value="${suggestion != null ? suggestion['owner'] : ''}"
+                           placeholder="Enter if known">
+                </label>
+            </p>
+
+            <p>
+                <label>Status:
+                    <select th:name="${'status_' + passage['id']}">
+                        <option value="Unknown"
+                                th:selected="${suggestion == null or suggestion['status'] == 'Unknown'}">
+                            Unknown
+                        </option>
+                        <option value="Not started"
+                                th:selected="${suggestion != null and suggestion['status'] == 'Not started'}">
+                            Not started
+                        </option>
+                        <option value="In progress"
+                                th:selected="${suggestion != null and suggestion['status'] == 'In progress'}">
+                            In progress
+                        </option>
+                        <option value="Completed"
+                                th:selected="${suggestion != null and suggestion['status'] == 'Completed'}">
+                            Completed
+                        </option>
+                        <option value="Blocked"
+                                th:selected="${suggestion != null and suggestion['status'] == 'Blocked'}">
+                            Blocked
+                        </option>
+                    </select>
+                </label>
+            </p>
+
+            <p>
+                <label>Next action:
+                    <input type="text"
+                           th:name="${'next_' + passage['id']}"
+                           th:value="${suggestion != null ? suggestion['next'] : ''}"
+                           placeholder="Enter if known">
+                </label>
+            </p>
+
+            <label>
+                <input type="checkbox" name="approved"
+                       th:value="${passage['id']}">
+                Include this item in the handover
+            </label>
+        </div>
+
+        <p><button type="submit">Create handover</button></p>
+    </form>
+</section>
+
+<section id="approved-handover" th:if="${handover != null}">
+    <h2>Approved handover</h2>
+    <button id="print-handover" type="button" onclick="window.print()">
+        Print / Save as PDF
+    </button>
+
+    <div th:each="item : ${handover}">
+        <hr>
+        <h3 th:text="${item['task']}"></h3>
+
+        <p>Owner: <span th:text="${item['owner']}"></span></p>
+        <p>Status: <span th:text="${item['status']}"></span></p>
+        <p>Next action: <span th:text="${item['next']}"></span></p>
+
+        <p>
+            Source:
+            <strong th:text="${item['id']}"></strong>
+            <span th:text="${item['file']}"></span>
+        </p>
+
+        <blockquote th:text="${item['source']}"></blockquote>
+    </div>
+</section>
+<script>
+    document.getElementById("sample-button").addEventListener("click", function () {
+        const files = new DataTransfer();
+
+        const notes = `Asha collected some presentation recordings before leaving the team.
+The team still needs to collect the remaining recordings.
+The professor asked the team to check the length of each recording.`;
+
+        const tasks = `Task,Owner,Status,Next step
+Collect remaining recordings,Unassigned,In progress,Find missing clips
+Check recording lengths,Rahul,In progress,Review each clip
+Combine final presentation,Unassigned,Not started,Wait for all recordings`;
+
+        files.items.add(new File(
+            [notes], "meeting-notes.txt", {type: "text/plain"}
+        ));
+
+        files.items.add(new File(
+            [tasks], "task-list.csv", {type: "text/csv"}
+        ));
+
+        document.getElementById("sample-files").files = files.files;
+        document.getElementById("sample-form").requestSubmit();
+    });
+</script>
+</body>
+</html>
