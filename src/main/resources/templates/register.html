@@ -1,0 +1,13 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Create account')}"></head><body>
+<header th:replace="~{fragments :: header}"></header>
+<main class="shell narrow"><p class="eyebrow">Your workspace</p><h1>Create an account</h1>
+    <div th:replace="~{fragments :: messages}"></div>
+    <form class="card stack" th:action="@{/register}" method="post">
+        <div><label for="username">Username</label><input id="username" name="username" type="text" minlength="3" maxlength="32" autocomplete="username" required><p class="hint">3–32 letters, numbers, dots, underscores or hyphens. Usernames are not case-sensitive.</p></div>
+        <div><label for="password">Password</label><input id="password" name="password" type="password" minlength="12" autocomplete="new-password" required><p class="hint">Use at least 12 characters. Password recovery is not available in this demo.</p></div>
+        <div><label for="confirmPassword">Confirm password</label><input id="confirmPassword" name="confirmPassword" type="password" minlength="12" autocomplete="new-password" required></div>
+        <div><button type="submit">Create account</button></div>
+        <p class="muted">Already have an account? <a th:href="@{/login}">Sign in</a>.</p>
+    </form>
+</main></body></html>

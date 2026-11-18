@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle} + ' | TraceHandover'">TraceHandover</title>
+    <link rel="stylesheet" th:href="@{/app.css}">
+</head>
+<body>
+<header class="site-header no-print" th:fragment="header">
+    <div class="header-inner">
+        <a class="brand" th:href="@{/}"><span class="brand-mark">T</span>TraceHandover</a>
+        <nav class="header-links" aria-label="Main navigation">
+            <a th:href="@{/}">Home</a>
+            <a th:if="${currentUsername != null}" th:href="@{/projects}">My projects</a>
+            <a th:if="${currentUsername == null}" th:href="@{/login}">Sign in</a>
+            <a th:if="${currentUsername == null}" th:href="@{/register}">Create account</a>
+            <span th:if="${currentUsername != null}" th:text="${currentUsername}"></span>
+            <form th:if="${currentUsername != null}" th:action="@{/logout}" method="post"><button type="submit">Sign out</button></form>
+        </nav>
+    </div>
+</header>
+<div th:fragment="messages">
+    <p class="notice error" role="alert" th:if="${error != null}" th:text="${error}"></p>
+    <p class="notice" role="status" th:if="${message != null}" th:text="${message}"></p>
+</div>
+<div class="claim" th:fragment="claim(label, claim)">
+    <span class="claim-label" th:text="${label}">Field</span>
+    <span th:text="${#strings.isEmpty(claim.value()) ? 'Not provided' : claim.value()}"></span>
+    <p class="hint" th:if="${!#strings.isEmpty(claim.value()) and #lists.isEmpty(claim.evidence())}">No evidence was linked to this claim. Review before relying on it.</p>
+    <div class="evidence" th:each="source : ${claim.evidence()}">
+        <strong th:text="${source.id() + ' · ' + source.file()}"></strong>
+        <div th:text="${source.text()}"></div>
+    </div>
+</div>
+<fieldset th:fragment="editClaim(label, field, group, value, selectedEvidence)">
+    <legend th:text="${label}">Claim</legend>
+    <label th:for="${field + '_' + group.id()}">Reviewed value</label>
+    <input th:if="${field != 'status'}" type="text" maxlength="300"
+           th:id="${field + '_' + group.id()}" th:name="${field + '_' + group.id()}" th:value="${value}">
+    <select th:if="${field == 'status'}" th:id="${field + '_' + group.id()}" th:name="${field + '_' + group.id()}">
+        <option value="Unknown" th:selected="${value == 'Unknown'}">Unknown</option>
+        <option value="Not started" th:selected="${value == 'Not started'}">Not started</option>
+        <option value="In progress" th:selected="${value == 'In progress'}">In progress</option>
+        <option value="Completed" th:selected="${value == 'Completed'}">Completed</option>
+        <option value="Blocked" th:selected="${value == 'Blocked'}">Blocked</option>
+    </select>
+    <div class="hint" th:each="candidate : ${group.claims().get(field)}">
+        Candidate: <strong th:text="${candidate.value()}"></strong> —
+        <span th:each="source, stat : ${candidate.sources()}" th:text="${source.id() + (stat.last ? '' : ', ')}"></span>
+    </div>
+    <p class="hint">Link the source passages you checked for this claim. Leave blank if no source supports it.</p>
+    <div class="evidence-options">
+        <label class="checkbox" th:each="source : ${group.sources()}">
+            <input type="checkbox" th:name="${'evidence_' + field + '_' + group.id()}" th:value="${source.id()}"
+                   th:checked="${#lists.contains(selectedEvidence, source.id())}">
+            <span th:text="${source.id()}"></span>
+        </label>
+    </div>
+</fieldset>
+</body></html>

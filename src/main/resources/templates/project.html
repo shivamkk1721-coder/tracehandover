@@ -1,0 +1,41 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Project')}"></head><body>
+<header th:replace="~{fragments :: header}"></header>
+<main class="shell"><a th:href="@{/projects}">← All projects</a><p class="eyebrow" th:text="${project.role()}"></p>
+    <h1 th:text="${project.name()}"></h1><p class="muted" th:text="${'Departing member: ' + project.departingMember()}"></p>
+    <div th:replace="~{fragments :: messages}"></div>
+    <div class="grid">
+        <section class="card"><h2>Approved versions</h2>
+            <div class="empty" th:if="${#lists.isEmpty(versions)}">No approved handovers yet.</div>
+            <div class="project-row" th:each="version : ${versions}">
+                <div><a th:href="@{/projects/{pid}/versions/{vid}(pid=${project.id()},vid=${version.id()})}" th:text="${'Version ' + version.number()}"></a><div class="hint" th:text="${version.createdAt()}"></div></div>
+            </div>
+        </section>
+        <section class="card" th:if="${project.role() == 'COORDINATOR'}"><h2>Review source files</h2>
+            <p class="muted">Upload authorized UTF-8 .txt, .md or .csv files. Up to 40 non-empty lines and 16,000 characters per review.</p>
+            <p class="notice warning">Uploaded text may be sent to Gemini. Use synthetic or authorized non-sensitive information.</p>
+            <form class="stack" th:action="@{/projects/{id}/upload(id=${project.id()})}" method="post" enctype="multipart/form-data">
+                <div><label for="files">Source files</label><input id="files" name="files" type="file" accept=".txt,.md,.csv" multiple required></div>
+                <div><label for="grouping">Passage grouping</label><select id="grouping" name="grouping"><option value="related">Suggest related groups</option><option value="separate">Keep each passage separate</option></select><p class="hint">Use separate passages if suggested grouping combines unrelated information.</p></div>
+                <p class="hint">AI suggestions can take up to 20 seconds. Manual review is available if AI is unavailable.</p>
+                <div><button type="submit">Review sources</button></div>
+            </form>
+        </section>
+        <section class="card" th:if="${project.role() == 'COORDINATOR'}"><h2>Recipient access</h2>
+            <p class="muted">Ask the recipient to create an account, then add their username. Recipients can view approved versions only.</p>
+            <form class="stack" th:action="@{/projects/{id}/recipients(id=${project.id()})}" method="post">
+                <div><label for="recipientUsername">Recipient username</label><input id="recipientUsername" name="recipientUsername" type="text" maxlength="32" autocomplete="off" required></div>
+                <div><button type="submit">Add recipient</button></div>
+            </form>
+            <p class="hint" th:if="${#lists.isEmpty(recipients)}">No recipients added yet.</p>
+            <div class="project-row" th:each="recipient : ${recipients}">
+                <span th:text="${recipient}"></span>
+                <form th:action="@{/projects/{id}/recipients/remove(id=${project.id()})}" method="post">
+                    <input type="hidden" name="recipientUsername" th:value="${recipient}">
+                    <button type="submit" class="secondary">Remove access</button>
+                </form>
+            </div>
+        </section>
+        <section class="card" th:if="${project.role() == 'RECIPIENT'}"><h2>Your access</h2><p>You can open approved versions and acknowledge receipt. Draft source review is available to the coordinator.</p></section>
+    </div>
+</main></body></html>

@@ -35,3 +35,6 @@ build/
 target/
 .env
 .env.*
+/tracehandover-data.mv.db
+/tracehandover-data.trace.db
+/tracehandover-data.lock.db

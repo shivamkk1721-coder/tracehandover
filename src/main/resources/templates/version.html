@@ -1,0 +1,29 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Approved handover')}"></head><body>
+<header th:replace="~{fragments :: header}"></header>
+<main class="shell">
+    <a class="no-print" th:if="${demo == true}" th:href="@{/}">← Home</a>
+    <a class="no-print" th:if="${demo != true}" th:href="@{/projects/{id}(id=${project.id()})}">← Project</a>
+    <p class="eyebrow" th:text="${demo == true ? 'Synthetic sample' : 'Approved version ' + version.number()}"></p>
+    <h1>Approved handover</h1>
+    <p th:if="${demo != true}" th:text="${project.name() + ' · Departing member: ' + project.departingMember()}"></p>
+    <p class="muted">Evidence links show what the reviewer selected. They do not automatically verify a claim.</p>
+    <div class="actions no-print"><button type="button" onclick="window.print()">Print / Save as PDF</button></div>
+    <div class="notice" th:if="${demo != true}"><strong>Changes:</strong> <span th:text="${version.changeSummary()}"></span><p class="hint">Items are compared by their position in the approved version.</p></div>
+    <article class="card" th:each="item, stat : ${snapshot.items()}">
+        <p class="eyebrow" th:text="${'Item ' + stat.count}"></p><h2 th:text="${item.task().value()}"></h2>
+        <div th:replace="~{fragments :: claim('Task', ${item.task()})}"></div>
+        <div th:replace="~{fragments :: claim('Owner', ${item.owner()})}"></div>
+        <div th:replace="~{fragments :: claim('Status', ${item.status()})}"></div>
+        <div th:replace="~{fragments :: claim('Next action', ${item.next()})}"></div>
+        <div class="notice warning" th:if="${!#lists.isEmpty(item.warnings())}"><strong>Review notes</strong><ul><li th:each="warning : ${item.warnings()}" th:text="${warning}"></li></ul></div>
+    </article>
+    <section class="card no-print" th:if="${demo != true and project.role() == 'RECIPIENT'}">
+        <h2>Receipt</h2><p th:if="${acknowledged}">You have acknowledged this version.</p>
+        <form th:unless="${acknowledged}" th:action="@{/projects/{pid}/versions/{vid}/acknowledge(pid=${project.id()},vid=${version.id()})}" method="post"><button type="submit">Acknowledge receipt</button></form>
+    </section>
+    <section class="card no-print" th:if="${demo != true and project.role() == 'COORDINATOR'}">
+        <h2>Recipient acknowledgements</h2><p class="muted" th:if="${#lists.isEmpty(acknowledgements)}">No acknowledgements yet.</p>
+        <ul><li th:each="ack : ${acknowledgements}" th:text="${ack.username() + ' · ' + ack.acknowledgedAt()}"></li></ul>
+    </section>
+</main></body></html>

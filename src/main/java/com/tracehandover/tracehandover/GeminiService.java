@@ -26,7 +26,7 @@ public class GeminiService {
     private final ObjectMapper json = new ObjectMapper();
 
     private final HttpClient client = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(10))
+            .connectTimeout(Duration.ofSeconds(6))
             .build();
 
     public Map<String, Map<String, String>> suggest(
@@ -90,7 +90,7 @@ public class GeminiService {
         );
 
         HttpRequest request = HttpRequest.newBuilder(URI.create(ENDPOINT))
-                .timeout(Duration.ofSeconds(45))
+                .timeout(Duration.ofSeconds(20))
                 .header("Content-Type", "application/json")
                 .header("x-goog-api-key", apiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(

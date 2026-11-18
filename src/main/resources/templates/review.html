@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Review sources')}"></head><body>
+<header th:replace="~{fragments :: header}"></header>
+<main class="shell">
+    <a th:if="${projectId == null}" th:href="@{/}">← Home</a>
+    <a th:if="${projectId != null}" th:href="@{/projects/{id}(id=${projectId})}">← Project</a>
+    <p class="eyebrow">Human review</p><h1>Check the sources</h1>
+    <p>Related passages are grouped as suggestions. Compare them, correct each value and choose the passages that support each claim.</p>
+    <div th:replace="~{fragments :: messages}"></div>
+    <p class="notice" role="status" th:text="${aiMessage}"></p>
+    <p class="notice warning"><strong>Review is essential.</strong> A source ID is a reference, not proof that a claim is correct. Possible conflicts may reflect different times or contexts.</p>
+    <form th:action="${projectId == null ? '/demo/approve' : '/projects/' + projectId + '/approve'}" method="post">
+        <input type="hidden" name="requestToken" th:value="${requestToken}">
+        <article class="review-group" th:each="row : ${reviewGroups}" th:with="group=${row.group()}">
+            <p class="eyebrow" th:text="${group.id()}"></p><h2 th:text="${group.title()}"></h2>
+            <ul class="sources"><li th:each="source : ${group.sources()}"><strong th:text="${source.id() + ' · ' + source.file()}"></strong><span th:text="${source.text()}"></span></li></ul>
+            <div class="notice warning" th:if="${!#lists.isEmpty(group.warnings())}"><strong>Review notes</strong><ul><li th:each="warning : ${group.warnings()}" th:text="${warning}"></li></ul></div>
+            <div th:replace="~{fragments :: editClaim('Task', 'task', ${group}, ${row.task()}, ${row.evidence('task')})}"></div>
+            <div th:replace="~{fragments :: editClaim('Owner', 'owner', ${group}, ${row.owner()}, ${row.evidence('owner')})}"></div>
+            <div th:replace="~{fragments :: editClaim('Status', 'status', ${group}, ${row.status()}, ${row.evidence('status')})}"></div>
+            <div th:replace="~{fragments :: editClaim('Next action', 'next', ${group}, ${row.next()}, ${row.evidence('next')})}"></div>
+            <label class="checkbox" th:if="${!#lists.isEmpty(group.warnings())}"><input type="checkbox" name="includeNotes" th:value="${group.id()}" th:checked="${row.notesSelected()}"><span>Share the review notes above with the recipient</span></label>
+            <label class="checkbox"><input type="checkbox" name="approved" th:value="${group.id()}" th:checked="${row.selected()}"><span><strong>Include this item</strong> in the approved handover</span></label>
+        </article>
+        <button type="submit">Create approved handover</button>
+    </form>
+</main></body></html>

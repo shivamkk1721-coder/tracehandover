@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Projects')}"></head><body>
+<header th:replace="~{fragments :: header}"></header>
+<main class="shell"><p class="eyebrow">Your workspace</p><h1>Projects</h1>
+    <div th:replace="~{fragments :: messages}"></div>
+    <div class="grid">
+        <section class="card"><h2>Your projects</h2>
+            <div class="empty" th:if="${#lists.isEmpty(projects)}">No projects yet. Create one or ask a coordinator to add your username.</div>
+            <div class="project-row" th:each="project : ${projects}">
+                <div><a th:href="@{/projects/{id}(id=${project.id()})}" th:text="${project.name()}"></a><div class="hint" th:text="${'Departing member: ' + project.departingMember()}"></div></div>
+                <span class="pill" th:text="${project.role()}"></span>
+            </div>
+        </section>
+        <section class="card"><h2>Start a handover</h2><p class="muted">You’ll be the coordinator for a project you create.</p>
+            <form class="stack" th:action="@{/projects}" method="post">
+                <input type="hidden" name="requestToken" th:value="${projectCreateToken}">
+                <div><label for="name">Project name</label><input id="name" name="name" type="text" maxlength="120" required></div>
+                <div><label for="departingMember">Departing member</label><input id="departingMember" name="departingMember" type="text" maxlength="120" required></div>
+                <div><button type="submit">Create project</button></div>
+            </form>
+        </section>
+    </div>
+</main></body></html>
